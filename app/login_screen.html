@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trippechalo Staff Login</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                        "text-primary": "#0d141b",
+                        "text-secondary": "#4c739a",
+                        "border-color": "#cfdbe7",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased text-text-primary min-h-screen flex items-center justify-center p-4">
+<!-- Mobile Container -->
+<div class="w-full max-w-md mx-auto bg-slate-50 rounded-lg shadow-sm border border-border-color/20 overflow-hidden relative">
+<!-- Top decorative element -->
+<div class="h-2 w-full bg-primary/20"></div>
+<!-- Header Section -->
+<div class="flex flex-col items-center pt-10 pb-6 px-6">
+<div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-3xl">qr_code_scanner</span>
+</div>
+<h1 class="text-text-primary tracking-tight text-3xl font-bold leading-tight text-center">Trippechalo</h1>
+<p class="text-text-secondary text-base font-medium leading-normal pt-2 text-center">Welcome back, staff!</p>
+</div>
+<!-- Login Form -->
+<form class="flex flex-col gap-5 px-6 pb-6">
+<!-- Email Field -->
+<label class="flex flex-col gap-1.5">
+<span class="text-text-primary text-sm font-semibold ml-1">Email Address</span>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-text-secondary group-focus-within:text-primary transition-colors">mail</span>
+</div>
+<input class="w-full bg-background-light border border-border-color text-text-primary text-base rounded-xl h-14 pl-12 pr-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-text-secondary/60 outline-none" placeholder="staff@trippechalo.com" required="" type="email"/>
+</div>
+</label>
+<!-- Password Field -->
+<label class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center ml-1">
+<span class="text-text-primary text-sm font-semibold">Password</span>
+<a class="text-primary text-xs font-medium hover:underline" href="#">Forgot?</a>
+</div>
+<div class="relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-text-secondary group-focus-within:text-primary transition-colors">lock</span>
+</div>
+<input class="w-full bg-background-light border border-border-color text-text-primary text-base rounded-xl h-14 pl-12 pr-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-text-secondary/60 outline-none" placeholder="••••••••" required="" type="password"/>
+<button class="absolute inset-y-0 right-0 pr-4 flex items-center" type="button">
+<span class="material-symbols-outlined text-text-secondary/60 hover:text-text-primary cursor-pointer text-xl">visibility_off</span>
+</button>
+</div>
+</label>
+<!-- Submit Button -->
+<button class="mt-4 w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg rounded-xl transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2">
+<span>Sign In</span>
+<span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+</form>
+<!-- Support Section -->
+<div class="px-6 pb-10 pt-2">
+<div class="relative flex py-5 items-center">
+<div class="flex-grow border-t border-border-color/50"></div>
+<span class="flex-shrink mx-4 text-text-secondary text-xs font-medium uppercase tracking-wider">Support</span>
+<div class="flex-grow border-t border-border-color/50"></div>
+</div>
+<div class="bg-primary/5 rounded-2xl p-5 text-center border border-primary/10">
+<p class="text-text-primary text-sm font-medium leading-relaxed mb-3">
+                    New here? Contact Customer Support to create a staff account.
+                </p>
+<a class="inline-flex items-center justify-center text-primary font-bold text-sm hover:underline decoration-2 underline-offset-4 gap-1" href="#">
+<span class="material-symbols-outlined text-lg">support_agent</span>
+                    Contact Support
+                </a>
+</div>
+</div>
+<!-- Footer Info -->
+<div class="bg-background-light py-4 text-center border-t border-border-color/20">
+<p class="text-text-secondary text-xs">Version 2.4.0 • Trippechalo Staff App</p>
+</div>
+</div>
+</body></html>

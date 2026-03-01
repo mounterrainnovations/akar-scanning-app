@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trippechalo - Contact Management Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col overflow-hidden">
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Header -->
+<header class="sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md px-6 pt-12 pb-4 border-b border-slate-200 dark:border-slate-800">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center w-10 h-10 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300" style="font-size: 20px;">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Event Contacts</h1>
+</div>
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-300">search</span>
+</button>
+</div>
+</header>
+<div class="px-6 py-6 space-y-8">
+<!-- Quick Actions -->
+<section>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-white">sos</span>
+</div>
+<span class="text-sm font-semibold text-primary">Emergency</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-white">support_agent</span>
+</div>
+<span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Support</span>
+</button>
+</div>
+</section>
+<!-- Organizers Section -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Organizers</h2>
+<a class="text-sm font-medium text-primary hover:text-primary/80" href="#">View All</a>
+</div>
+<div class="space-y-3">
+<!-- Contact Card 1 -->
+<div class="flex items-center p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-full bg-slate-200 bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-sm" data-alt="Portrait of Sarah Jenkins smiling" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCf7rWK-XTycdsfjMZ5TKHU5OF6FEKnsAgWzx473LO9UYhRx6ypio1juOTqk3LhJEzUU9Icqr-i3ZZOLOtG8BuUdtKSbopkgKVqiUAJ3sw0rQmzNw9iO-pcsmW2fsPlrkMnjm3fnt01nd1-IAQeiwLTg0epNHnV3TnLXbbQ05X-Ak3xptcWsGa0sofGWVc8lPe7MlA5n4eM1hFysqVg7wz5a9J0v7ozz3Qeo3HKVxfdhqlPQHABUUjuZITMx1eBCWEfGkx35ckcksg');"></div>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0 ml-4">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">Sarah Jenkins</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Lead Event Coordinator</p>
+</div>
+<div class="flex items-center gap-2 ml-2">
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+<!-- Contact Card 2 -->
+<div class="flex items-center p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-full bg-slate-200 bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-sm" data-alt="Portrait of Mike Ross looking professional" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAWYBvnCkx6CDvGU5cYItFf89pYovOjNCZ3YhBrfUaVFIW7mfxFzLYtFOsMu5CdYj9j-HG0_rj1T-Hv-ak-NwgGIKPYx8BZdjR224KL7_pMDVz9MYz5EPnmrtdKw-HRUEOE5bQnn599Bb1n8v_q8Uc6imXsK15XNrDln6VgnIrF0gQA9Rxeo7sMhJ-V4HRl7--fbQdpRzt2AwrfgoeWKb6LBqmolcoG_ZN713Kfm8I878jO2Xeazyr5veS9EdA01Ocl7EQJ88gCqWk');"></div>
+<div class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-amber-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0 ml-4">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">Mike Ross</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Venue Manager</p>
+</div>
+<div class="flex items-center gap-2 ml-2">
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Venue Staff Section -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Venue Staff</h2>
+</div>
+<div class="space-y-3">
+<!-- Contact Card 3 -->
+<div class="flex items-center p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-full bg-slate-200 bg-cover bg-center border-2 border-white dark:border-slate-700 shadow-sm" data-alt="Portrait of Jessica Pearson in business attire" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA4x6xEk8f_wxaZzRBDatuXccGjhxtJ1PPX6TAYRoI9JC10j4yZpjjuRvKBKzzQUolwi2b_Uu-GQtG9W_3utW5CIUsyKFrqQTP6AhZ5x9pbLD2miY9e1IC9_yJ2Id-0TVxg6cwj0o6y19XVzjHWysGCifab9VJZo9r3mhjoR1VG3roucdg3Z9SPaNh5aN451ZqVhF5xPahipfILAb740F6lx5b2_K87BT4xN8buar6Xb1_pObLiXV9zN1aBFO2ycf-E8-Zi9UiQdUU');"></div>
+</div>
+<div class="flex-1 min-w-0 ml-4">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">Jessica Pearson</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Security Chief</p>
+</div>
+<div class="flex items-center gap-2 ml-2">
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+<!-- Contact Card 4 -->
+<div class="flex items-center p-4 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
+<div class="relative shrink-0">
+<div class="w-14 h-14 rounded-full bg-slate-200 bg-primary/20 flex items-center justify-center border-2 border-white dark:border-slate-700 shadow-sm">
+<span class="text-lg font-bold text-primary">DL</span>
+</div>
+</div>
+<div class="flex-1 min-w-0 ml-4">
+<h3 class="text-base font-semibold text-slate-900 dark:text-white truncate">David Lee</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">Audio Engineer</p>
+</div>
+<div class="flex items-center gap-2 ml-2">
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">chat_bubble</span>
+</button>
+<button class="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-700 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all">
+<span class="material-symbols-outlined text-[20px]">call</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pb-5 pt-3 px-6 z-50">
+<div class="flex justify-between items-center max-w-lg mx-auto">
+<a class="flex flex-col items-center justify-center gap-1 group w-16" href="#">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors text-[24px]">qr_code_scanner</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors">Scan</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 group w-16" href="#">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors text-[24px]">groups</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors">Attendees</span>
+</a>
+<!-- Active Tab Indicator -->
+<a class="flex flex-col items-center justify-center gap-1 w-16 relative" href="#">
+<div class="absolute -top-3 w-10 h-1 bg-primary rounded-full"></div>
+<span class="material-symbols-outlined text-primary text-[24px] fill-current" style="font-variation-settings: 'FILL' 1;">call</span>
+<span class="text-[10px] font-bold text-primary">Contacts</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 group w-16" href="#">
+<span class="material-symbols-outlined text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors text-[24px]">account_circle</span>
+<span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 group-hover:text-primary transition-colors">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>

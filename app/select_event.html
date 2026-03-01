@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trippechalo - Select Event</title>
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2b8cee",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display antialiased min-h-screen flex flex-col items-center justify-center p-0 sm:p-4">
+<!-- Mobile Container -->
+<div class="relative flex h-full min-h-screen w-full max-w-md flex-col bg-background-light dark:bg-background-dark overflow-hidden sm:rounded-lg shadow-2xl sm:h-[850px] sm:min-h-0 sm:border border-slate-200 dark:border-slate-800">
+<!-- Header -->
+<header class="sticky top-0 z-10 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md px-4 pt-12 pb-2">
+<div class="flex items-center justify-between mb-4">
+<button class="flex size-10 items-center justify-center rounded-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-lg font-bold text-slate-900 dark:text-white flex-1 text-center pr-10">Select Designated Event</h1>
+</div>
+<!-- Search -->
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+<span class="material-symbols-outlined text-slate-400">search</span>
+</div>
+<input class="block w-full rounded-lg bg-white dark:bg-slate-800 border-0 py-3 pl-10 pr-3 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary shadow-sm" placeholder="Search events..." type="text"/>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 overflow-y-auto px-4 pb-24 no-scrollbar">
+<!-- Section Title -->
+<div class="flex items-center justify-between mt-4 mb-3">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">Assigned Events</h2>
+<button class="text-primary text-sm font-medium hover:text-primary/80">View All</button>
+</div>
+<!-- Event Card 1 -->
+<div class="group relative mb-4 flex flex-col rounded-lg bg-white dark:bg-slate-800 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] transition-all hover:shadow-lg dark:shadow-slate-900/50 overflow-hidden">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10"></div>
+<div class="h-full w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Concert crowd with stage lights" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDQ_snCOWcUKiO5VMA0M9gr1Vx3Xs32UnMkYFmf9BhOtK-kjhYd9-gMlk27J-Jqhf4_QQ7H3qmrYQ_wFToKxaV4NLwJbscOWWRJ6_cLeeNb3zgcqPlPIdjsTCHrQofuKgL6BCgbM_vSJpZUKP8kpiY-a2jK6kBh25bZ7WYc5niPCUgHEA464_YxG27FFo0LJEnKKzEg2zFgcRmO0JXuqgWGIdeoRmRf1-RBP4SANHz5sJ8ykj1r8tP_lwmrejv8_RmiFc2vdwDwixw');">
+</div>
+<div class="absolute top-3 right-3 z-20">
+<span class="inline-flex items-center rounded-full bg-white/90 dark:bg-slate-900/90 px-2.5 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
+<span class="material-symbols-outlined text-[14px] mr-1">confirmation_number</span>
+                            342 Sold
+                        </span>
+</div>
+<div class="absolute bottom-3 left-4 z-20 text-white">
+<p class="text-sm font-medium opacity-90">Today, 8:00 PM</p>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1">Summer Music Festival</h3>
+<div class="flex items-center text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[18px] mr-1">location_on</span>
+                        Central Park Arena
+                    </div>
+<button class="flex w-full items-center justify-center rounded-lg bg-primary py-3 text-sm font-semibold text-white transition-colors hover:bg-primary/90 active:scale-[0.98]">
+                        Select Event
+                        <span class="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Event Card 2 -->
+<div class="group relative mb-4 flex flex-col rounded-lg bg-white dark:bg-slate-800 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] transition-all hover:shadow-lg dark:shadow-slate-900/50 overflow-hidden">
+<div class="relative h-40 w-full overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10"></div>
+<div class="h-full w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Conference hall with attendees" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA_9eFu7uTOwiupCFxvQZjtZQ-P1LBmsPTcq3bsFyRW8Dq0yc5OhXzg6ugj09qu5-VOitAP3q3hCVkpJ9iWQGbXjk_rBd5rveRpAT6uL7pZVpgm068WJC6htNoyGLA7_0oAdZcWeNQjcUyVXfPLocnoIPoCcbFFYkrly7kUYqT5-lBJFZmvbweAsb1s_QAUBuYM2gJIp3egFvyuX3l8mtKamwunTUdpBYDQ5edBfTApjxzF9zpg9MqczhSC0iaLku1UCYw9EaNie3U');">
+</div>
+<div class="absolute top-3 right-3 z-20">
+<span class="inline-flex items-center rounded-full bg-white/90 dark:bg-slate-900/90 px-2.5 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
+<span class="material-symbols-outlined text-[14px] mr-1">confirmation_number</span>
+                            1,205 Sold
+                        </span>
+</div>
+<div class="absolute bottom-3 left-4 z-20 text-white">
+<p class="text-sm font-medium opacity-90">Aug 12, 10:00 AM</p>
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1">Tech Innovators Summit 2024</h3>
+<div class="flex items-center text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[18px] mr-1">location_on</span>
+                        Moscone Center
+                    </div>
+<button class="flex w-full items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 py-3 text-sm font-semibold text-slate-900 dark:text-white transition-colors hover:bg-slate-200 dark:hover:bg-slate-600 active:scale-[0.98]">
+                        Select Event
+                    </button>
+</div>
+</div>
+<!-- Event Card 3 -->
+<div class="group relative mb-4 flex flex-col rounded-lg bg-white dark:bg-slate-800 shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] transition-all hover:shadow-lg dark:shadow-slate-900/50 overflow-hidden opacity-80">
+<div class="relative h-40 w-full overflow-hidden grayscale">
+<div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent z-10"></div>
+<!-- Overlay for past event -->
+<div class="absolute inset-0 bg-white/20 dark:bg-black/40 z-10 flex items-center justify-center">
+<span class="bg-slate-900/80 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm">Ended</span>
+</div>
+<div class="h-full w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Art gallery exhibition" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDjGgOH-V5b_rmB4eAKywQdn03x-0aqhKQTI8Fr2FecFFI6rI-6NRYKm_5VvjSp5VTD2eH3ftXphxuOMEFh8G6tgI6b4kIeM9_c-bfgcjsh-nvDxP4WHPOqgIO7xnKG6Ox8B_xkYmVn9yPEZsNMX7ieSckT_CQ_iRbc5uC2jcokKXTxLnmN41-pgcFlmEnN0OfoZ0fIrZ62XDHmgem_BPWCaKIGgSdT2WrlCm1vo7Uu87wTZJ4uG1LU12M5mUYAsySRuLIkm6ACxus');">
+</div>
+</div>
+<div class="p-4">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight mb-1">Modern Art Expo</h3>
+<div class="flex items-center text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[18px] mr-1">location_on</span>
+                        The Tate Modern
+                    </div>
+<button class="flex w-full items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-700 py-3 text-sm font-semibold text-slate-400 dark:text-slate-500 cursor-not-allowed">
+                        View Details
+                    </button>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="absolute bottom-0 w-full bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 px-6 pb-6 pt-3 z-30">
+<div class="flex justify-between items-center">
+<!-- Tab 1: Events (Active) -->
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="flex h-10 w-16 items-center justify-center rounded-full bg-primary/10 transition-colors group-hover:bg-primary/20">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1">calendar_month</span>
+</div>
+<span class="text-xs font-semibold text-primary">Events</span>
+</a>
+<!-- Tab 2: Scan -->
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="flex h-10 w-16 items-center justify-center rounded-full transition-colors group-hover:bg-slate-50 dark:group-hover:bg-slate-800">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">qr_code_scanner</span>
+</div>
+<span class="text-xs font-medium text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">Scan</span>
+</a>
+<!-- Tab 3: Profile -->
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="flex h-10 w-16 items-center justify-center rounded-full transition-colors group-hover:bg-slate-50 dark:group-hover:bg-slate-800">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">person</span>
+</div>
+<span class="text-xs font-medium text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300">Profile</span>
+</a>
+</div>
+</nav>
+</div>
+</body></html>
