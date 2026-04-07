@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'profile_screen.dart';
+import 'select_event_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -29,7 +31,7 @@ class DashboardScreen extends StatelessWidget {
           onPressed: () {},
         ),
         title: Text(
-          'Trippechalo',
+          'AWG',
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -491,14 +493,9 @@ class DashboardScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.dashboard, 'Dashboard', true, primaryColor),
-                _buildNavItem(
-                  Icons.calendar_today,
-                  'Events',
-                  false,
-                  primaryColor,
-                ),
-                _buildNavItem(Icons.person, 'Profile', false, primaryColor),
+                _buildNavItem(context, Icons.event, 'Events', false, primaryColor, const SelectEventScreen()),
+                _buildNavItem(context, Icons.qr_code_scanner, 'Scan', true, primaryColor, null),
+                _buildNavItem(context, Icons.person, 'Profile', false, primaryColor, const ProfileScreen()),
               ],
             ),
           ),
@@ -617,13 +614,25 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildNavItem(
+    BuildContext context,
     IconData icon,
     String label,
     bool isActive,
     Color primaryColor,
+    Widget? targetScreen,
   ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return GestureDetector(
+      onTap: () {
+        if (!isActive && targetScreen != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => targetScreen),
+          );
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 64,
@@ -647,6 +656,7 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ],
+    ),
     );
   }
 }

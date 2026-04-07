@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart'; // We will route here upon selection
+import 'profile_screen.dart';
 
 class SelectEventScreen extends StatelessWidget {
   const SelectEventScreen({super.key});
@@ -35,14 +36,6 @@ class SelectEventScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () => Navigator.pop(context),
-                        style: IconButton.styleFrom(
-                          backgroundColor: cardColor,
-                          shape: const CircleBorder(),
-                        ),
-                      ),
                       const Expanded(
                         child: Text(
                           'Select Designated Event',
@@ -53,7 +46,6 @@ class SelectEventScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 48), // Balance for centering
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -404,11 +396,11 @@ class SelectEventScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceAround, // updated aligned
             children: [
-              _buildNavItem(Icons.calendar_month, 'Events', true, primaryColor),
-              _buildNavItem(Icons.qr_code_scanner, 'Scan', false, primaryColor),
-              _buildNavItem(Icons.person, 'Profile', false, primaryColor),
+              _buildNavItem(context, Icons.calendar_month, 'Events', true, primaryColor, null),
+              _buildNavItem(context, Icons.qr_code_scanner, 'Scan', false, primaryColor, const DashboardScreen()),
+              _buildNavItem(context, Icons.person, 'Profile', false, primaryColor, const ProfileScreen()),
             ],
           ),
         ),
@@ -417,38 +409,51 @@ class SelectEventScreen extends StatelessWidget {
   }
 
   Widget _buildNavItem(
+    BuildContext context,
     IconData icon,
     String label,
     bool isActive,
     Color primaryColor,
+    Widget? targetScreen,
   ) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 64,
-          height: 40,
-          decoration: BoxDecoration(
-            color: isActive
-                ? primaryColor.withValues(alpha: 0.1)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: () {
+        if (!isActive && targetScreen != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => targetScreen),
+          );
+        }
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64,
+            height: 32, // Consistent height with others
+            decoration: BoxDecoration(
+              color: isActive
+                  ? primaryColor.withValues(alpha: 0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(
+              icon,
+              color: isActive ? primaryColor : Colors.grey.shade500,
+            ),
           ),
-          child: Icon(
-            icon,
-            color: isActive ? primaryColor : Colors.grey.shade500,
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+              color: isActive ? primaryColor : Colors.grey.shade500,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-            color: isActive ? primaryColor : Colors.grey.shade500,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

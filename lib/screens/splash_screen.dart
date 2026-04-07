@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
+import 'select_event_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,14 +14,28 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
+    _checkLoginState();
+  }
+
+  Future<void> _checkLoginState() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    await Future.delayed(const Duration(milliseconds: 2500));
+
+    if (mounted) {
+      if (isLoggedIn) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SelectEventScreen()),
+        );
+      } else {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
       }
-    });
+    }
   }
 
   @override
@@ -94,7 +110,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return const Column(
       children: [
         Text(
-          'Trippechalo',
+          'Akar Women Group',
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.bold,

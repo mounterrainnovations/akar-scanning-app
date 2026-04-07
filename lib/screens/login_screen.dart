@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'select_event_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -10,6 +12,74 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  Future<void> _signIn() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter both email and password')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await Supabase.instance.client
+          .from('app_users')
+          .select()
+          .eq('email', email)
+          .eq('password', password)
+          .maybeSingle();
+
+      if (response != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userEmail', email);
+
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SelectEventScreen(),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid credentials')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Trippechalo',
+                          'Akar Women Group',
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
@@ -108,7 +178,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         _buildLabel('Email Address'),
                         const SizedBox(height: 6),
                         _buildTextField(
-                          hint: 'staff@trippechalo.com',
+                          controller: _emailController,
+                          hint: 'staff@akar.com',
                           icon: Icons.mail,
                           keyboardType: TextInputType.emailAddress,
                           backgroundColor: backgroundColor,
@@ -121,18 +192,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             _buildLabel('Password'),
-                            Text(
-                              'Forgot?',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: primaryColor,
-                              ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: 6),
                         _buildTextField(
+                          controller: _passwordController,
                           hint: '••••••••',
                           icon: Icons.lock,
                           obscureText: _obscurePassword,
@@ -157,14 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SelectEventScreen(),
-                              ),
-                            );
-                          },
+                          onPressed: _isLoading ? null : _signIn,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
@@ -175,100 +232,31 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Support Section
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Divider(
-                                  color: borderColor.withValues(alpha: 0.5),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0,
-                                ),
-                                child: Text(
-                                  'SUPPORT',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: textSecondaryColor,
-                                    letterSpacing: 1,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
                                   ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Sign In',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward),
+                                  ],
                                 ),
-                              ),
-                              Expanded(
-                                child: Divider(
-                                  color: borderColor.withValues(alpha: 0.5),
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: primaryColor.withValues(alpha: 0.1),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                'New here? Contact Customer Support to create a staff account.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: textColor,
-                                  height: 1.5,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              TextButton.icon(
-                                onPressed: () {},
-                                icon: const Icon(Icons.support_agent),
-                                label: const Text('Contact Support'),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: primaryColor,
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        const SizedBox(height: 40),
                       ],
                     ),
                   ),
@@ -287,7 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     child: Text(
-                      'Version 2.4.0 • Trippechalo Staff App',
+                      'Version 2.4.0 • AWG Staff App',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: textSecondaryColor),
                     ),
@@ -317,6 +305,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildTextField({
+    TextEditingController? controller,
     required String hint,
     required IconData icon,
     bool obscureText = false,
@@ -328,6 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required Color hintColor,
   }) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       style: TextStyle(color: textColor, fontSize: 16),
