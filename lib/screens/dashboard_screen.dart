@@ -1,501 +1,709 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'scan_screen.dart';
 import 'profile_screen.dart';
-import 'select_event_screen.dart';
+import 'checkin_stats_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  final _client = Supabase.instance.client;
+  List<Map<String, dynamic>> _registrations = [];
+  List<Map<String, dynamic>> _events = [];
+  Set<String> _checkedInIds = {};
+  bool _loading = true;
+  String _searchQuery = '';
+  String? _selectedFilterEventId; // null = all events
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+    try {
+      final results = await Future.wait([
+        _client
+            .from('event_registrations')
+            .select('id, form_response, created_at, event_id, events(name, city)')
+            .eq('payment_status', 'paid')
+            .order('created_at', ascending: false),
+        _client
+            .from('events')
+            .select('id, name, city')
+            .order('created_at', ascending: false),
+        _client
+            .from('ticket_scans')
+            .select('registration_id')
+            .eq('scan_result', 'success'),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _registrations = List<Map<String, dynamic>>.from(results[0] as List);
+          _events = List<Map<String, dynamic>>.from(results[1] as List);
+          _checkedInIds = (results[2] as List)
+              .map((s) => s['registration_id'] as String)
+              .toSet();
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _getName(Map<String, dynamic> reg) {
+    final form = reg['form_response'] as Map?;
+    final name = (form?['name'] ?? '').toString().trim();
+    return name.isNotEmpty ? name : 'Unknown';
+  }
+
+  String _getPhone(Map<String, dynamic> reg) {
+    final form = reg['form_response'] as Map?;
+    return (form?['phone'] ?? form?['whatsapp_number'] ?? form?['mobile_number'] ?? '').toString().trim();
+  }
+
+  String _getEmail(Map<String, dynamic> reg) {
+    final form = reg['form_response'] as Map?;
+    return (form?['email'] ?? '').toString().trim();
+  }
+
+  String _getEventName(Map<String, dynamic> reg) {
+    final event = reg['events'] as Map?;
+    return (event?['name'] ?? '').toString().trim();
+  }
+
+  String _getEventCity(Map<String, dynamic> reg) {
+    final event = reg['events'] as Map?;
+    return (event?['city'] ?? '').toString().trim();
+  }
+
+  String _getTicketRef(Map<String, dynamic> reg) {
+    final id = reg['id']?.toString() ?? '';
+    return id.isNotEmpty ? 'TKT-${id.substring(0, 8).toUpperCase()}' : 'N/A';
+  }
+
+  String _formatDate(String? isoDate) {
+    if (isoDate == null) return '';
+    try {
+      final dt = DateTime.parse(isoDate).toLocal();
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return isoDate;
+    }
+  }
+
+  List<Map<String, dynamic>> get _filtered {
+    var list = _registrations;
+    if (_selectedFilterEventId != null) {
+      list = list.where((r) => r['event_id'] == _selectedFilterEventId).toList();
+    }
+    if (_searchQuery.isEmpty) return list;
+    final q = _searchQuery.toLowerCase();
+    return list.where((r) {
+      return _getName(r).toLowerCase().contains(q) ||
+          _getEventName(r).toLowerCase().contains(q) ||
+          _getPhone(r).contains(q);
+    }).toList();
+  }
+
+  void _showEventPicker() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final primary = const Color(0xFF2B8CEE);
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                margin: const EdgeInsets.only(top: 8, bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Text('Select Event',
+                style: TextStyle(
+                    fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+            const SizedBox(height: 4),
+            Text('View gate entry stats for a specific event',
+                style: TextStyle(fontSize: 13, color: textMuted)),
+            const SizedBox(height: 16),
+            if (_events.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                    child: Text('No events found.',
+                        style: TextStyle(color: textMuted))),
+              )
+            else
+              ...(_events.map((event) {
+                final name = (event['name'] ?? '').toString();
+                final city = (event['city'] ?? '').toString();
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CheckinStatsScreen(
+                          eventId: event['id'] as String,
+                          eventName: name,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: primary.withAlpha(20),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.event_note,
+                              color: primary, size: 18),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name,
+                                  style: TextStyle(
+                                      color: textColor,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                              if (city.isNotEmpty)
+                                Text(city,
+                                    style: TextStyle(
+                                        color: textMuted, fontSize: 12)),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.chevron_right, color: textMuted, size: 20),
+                      ],
+                    ),
+                  ),
+                );
+              })),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDetails(BuildContext context, Map<String, dynamic> reg) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = const Color(0xFF2B8CEE);
+    final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+
+    final name = _getName(reg);
+    final email = _getEmail(reg);
+    final phone = _getPhone(reg);
+    final ticketRef = _getTicketRef(reg);
+    final eventName = _getEventName(reg);
+    final eventCity = _getEventCity(reg);
+    final date = _formatDate(reg['created_at']);
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+
+    final form = reg['form_response'] as Map? ?? {};
+    final kidName = (form['kid_name'] ?? form['kids_name'] ?? form['child_s_full_name'] ?? '').toString().trim();
+    final kidAge = (form['kids_age'] ?? '').toString().trim();
+    final participantType = (form['participant_type'] ?? form['participation_for'] ?? '').toString().trim();
+    final parentName = (form['parent_s_name'] ?? form['mothers_name'] ?? '').toString().trim();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.only(top: 8, bottom: 20),
+              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+            ),
+            CircleAvatar(
+              backgroundColor: primaryColor.withAlpha(30),
+              radius: 30,
+              child: Text(initial, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 24)),
+            ),
+            const SizedBox(height: 12),
+            Text(name, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: primaryColor.withAlpha(20),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(ticketRef, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 13)),
+            ),
+            const SizedBox(height: 20),
+            _detailRow(Icons.event, 'Event', eventName, textColor, textMuted),
+            if (eventCity.isNotEmpty) _detailRow(Icons.location_on, 'City', eventCity, textColor, textMuted),
+            if (email.isNotEmpty) _detailRow(Icons.email_outlined, 'Email', email, textColor, textMuted),
+            if (phone.isNotEmpty) _detailRow(Icons.phone, 'Phone', phone, textColor, textMuted),
+            if (kidName.isNotEmpty) _detailRow(Icons.child_care, 'Child Name', kidName, textColor, textMuted),
+            if (kidAge.isNotEmpty) _detailRow(Icons.cake, 'Child Age', kidAge, textColor, textMuted),
+            if (participantType.isNotEmpty) _detailRow(Icons.category, 'Participation', participantType, textColor, textMuted),
+            if (parentName.isNotEmpty) _detailRow(Icons.person, 'Parent', parentName, textColor, textMuted),
+            if (date.isNotEmpty) _detailRow(Icons.calendar_today, 'Registered On', date, textColor, textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value, Color textColor, Color textMuted) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: const Color(0xFF2B8CEE)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 11, color: textMuted, fontWeight: FontWeight.w500)),
+                Text(value, style: TextStyle(fontSize: 14, color: textColor, fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? const Color(0xFF101922)
-        : const Color(0xFFF6F7F8);
+    final backgroundColor = isDark ? const Color(0xFF101922) : const Color(0xFFF6F7F8);
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
     final textColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final textMuted = isDark
-        ? const Color(0xFF94A3B8)
-        : const Color(0xFF64748B);
+    final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
     final primaryColor = const Color(0xFF2B8CEE);
-    final borderColor = isDark
-        ? const Color(0xFF334155)
-        : const Color(0xFFF1F5F9);
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+
+    final filtered = _filtered;
 
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
         backgroundColor: cardColor,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.menu, color: textColor),
-          onPressed: () {},
-        ),
-        title: Text(
-          'AWG',
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: Text('AWG Dashboard',
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 20)),
         actions: [
-          IconButton(
-            icon: Icon(Icons.notifications, color: textColor),
-            onPressed: () {},
-          ),
+          IconButton(icon: Icon(Icons.refresh, color: textMuted), onPressed: _loadData),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Hero Image
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Stack(
-                  children: [
-                    Image.network(
-                      'https://lh3.googleusercontent.com/aida-public/AB6AXuBUBt73g8wYLoliAhTn08g4iVSP-Fb5YEWJab7TA8LHB0mfBn-Vxn-t0MBsIvPF-fqqo57lXsCmY2XQVgCcc4xKK1Noc6AFbNoYQ09J61DzEwfIpvwgc_PlWIkX5hp-WZC5FfMO-1UzjqMHpw49Lyumd8V9wn57z5wiCm39IW3DkvDYKS-YGonUgUtc9pqTmvPGtDURG89gvnFcmelU-dIQWQsKvsOYEAnU6_pWr4uxfQSxAxkzLOHD-Ge_dTWIPkTwM9thZrDf9qg',
-                      height: 200,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                    Container(
-                      height: 200,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.black.withValues(alpha: 0.8),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: primaryColor.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              'LIVE NOW',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Summer Music Fest 2024',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Location / Date text
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      body: Column(
+        children: [
+          // ── Top bar: confirmed count ──────────────────────────────────
+          if (!_loading)
+            Container(
+              color: cardColor,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
-                  Icon(Icons.location_on, size: 16, color: textMuted),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Central Park, NY',
-                    style: TextStyle(color: textMuted, fontSize: 14),
-                  ),
-                  const SizedBox(width: 8),
-                  Text('•', style: TextStyle(color: textMuted, fontSize: 14)),
-                  const SizedBox(width: 8),
-                  Icon(Icons.calendar_today, size: 16, color: textMuted),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Aug 24, 2024',
-                    style: TextStyle(color: textMuted, fontSize: 14),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withAlpha(25),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.check_circle, size: 14, color: Colors.green),
+                        const SizedBox(width: 6),
+                        Text('${_registrations.length} Confirmed',
+                            style: const TextStyle(
+                                color: Colors.green,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
-
-            // Stats Card
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: borderColor),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+          // ── Gate Entry Status card ────────────────────────────────────
+          if (!_loading)
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: borderColor),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withAlpha(25),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.how_to_reg_outlined, color: primaryColor, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Attendance Status',
+                        Text('Gate Entry Status',
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: textColor)),
+                        const SizedBox(height: 2),
+                        Text('Track check-in progress per event',
+                            style: TextStyle(fontSize: 11, color: textMuted)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _showEventPicker,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: primaryColor,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Select Event',
                               style: TextStyle(
-                                color: textMuted,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold)),
+                          SizedBox(width: 4),
+                          Icon(Icons.arrow_forward_ios,
+                              color: Colors.white, size: 10),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // ── Search ────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: TextField(
+              onChanged: (v) => setState(() => _searchQuery = v),
+              decoration: InputDecoration(
+                hintText: 'Search by name, event, or phone...',
+                hintStyle: TextStyle(color: textMuted, fontSize: 14),
+                prefixIcon: Icon(Icons.search, color: textMuted, size: 20),
+                filled: true,
+                fillColor: cardColor,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: primaryColor)),
+              ),
+            ),
+          ),
+
+          // ── Event filter chips ────────────────────────────────────────
+          if (!_loading && _events.isNotEmpty)
+            SizedBox(
+              height: 44,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                itemCount: _events.length + 1, // +1 for "All Events"
+                itemBuilder: (_, i) {
+                  final isAll = i == 0;
+                  final eventId = isAll ? null : _events[i - 1]['id'] as String;
+                  final label = isAll
+                      ? 'All Events'
+                      : (_events[i - 1]['name'] as String? ?? '');
+                  final isSelected = _selectedFilterEventId == eventId;
+
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedFilterEventId = eventId),
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 0),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? primaryColor
+                            : (isDark
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFFF1F5F9)),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected
+                              ? primaryColor
+                              : borderColor,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? Colors.white
+                                : textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+          // ── Attendees header ──────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                Text('Attendees',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor)),
+                const SizedBox(width: 8),
+                Text('(${filtered.length})',
+                    style: TextStyle(color: textMuted, fontSize: 14)),
+              ],
+            ),
+          ),
+
+          // ── Attendees list ────────────────────────────────────────────
+          Expanded(
+            child: _loading
+                ? Center(child: CircularProgressIndicator(color: primaryColor))
+                : filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          _searchQuery.isEmpty && _selectedFilterEventId == null
+                              ? 'No confirmed attendees found.'
+                              : 'No results.',
+                          style: TextStyle(color: textMuted),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.only(bottom: 80),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, i) {
+                          final reg = filtered[i];
+                          final name = _getName(reg);
+                          final initial =
+                              name.isNotEmpty ? name[0].toUpperCase() : '?';
+                          final eventName = _getEventName(reg);
+                          final phone = _getPhone(reg);
+                          final isCheckedIn = _checkedInIds.contains(reg['id'] as String? ?? '');
+                          final statusColor = isCheckedIn ? Colors.green : primaryColor;
+
+                          return GestureDetector(
+                            onTap: () => _showDetails(context, reg),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 5),
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: isCheckedIn
+                                        ? Colors.green.withAlpha(80)
+                                        : (isDark
+                                            ? const Color(0xFF334155)
+                                            : const Color(0xFFE2E8F0))),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            RichText(
-                              text: TextSpan(
+                              child: Row(
                                 children: [
-                                  TextSpan(
-                                    text: '500 ',
-                                    style: TextStyle(
-                                      color: textColor,
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
+                                  // Plain avatar — no dot
+                                  CircleAvatar(
+                                    backgroundColor: primaryColor.withAlpha(25),
+                                    radius: 22,
+                                    child: Text(initial,
+                                        style: TextStyle(
+                                            color: primaryColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16)),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(name,
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color: textColor,
+                                                fontSize: 15),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis),
+                                        const SizedBox(height: 3),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.event,
+                                                size: 11,
+                                                color: primaryColor
+                                                    .withAlpha(180)),
+                                            const SizedBox(width: 3),
+                                            Expanded(
+                                              child: Text(eventName,
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: primaryColor
+                                                          .withAlpha(180)),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis),
+                                            ),
+                                          ],
+                                        ),
+                                        if (phone.isNotEmpty)
+                                          Text(phone,
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: textMuted)),
+                                      ],
                                     ),
                                   ),
-                                  TextSpan(
-                                    text: '/ 1200',
-                                    style: TextStyle(
-                                      color: textMuted,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
+                                  const SizedBox(width: 8),
+                                  // Explicit check-in status badge
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 9, vertical: 5),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                          color: statusColor.withAlpha(60),
+                                          width: 1),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          isCheckedIn
+                                              ? Icons.check_circle
+                                              : Icons.radio_button_unchecked,
+                                          color: statusColor,
+                                          size: 12,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          isCheckedIn
+                                              ? 'Checked In'
+                                              : 'Not In Yet',
+                                          style: TextStyle(
+                                              color: statusColor,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withAlpha(isDark ? 50 : 30),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.trending_up,
-                                size: 14,
-                                color: isDark
-                                    ? Colors.greenAccent
-                                    : Colors.green[700],
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '+12% vs last hr',
-                                style: TextStyle(
-                                  color: isDark
-                                      ? Colors.greenAccent
-                                      : Colors.green[700],
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Progress Bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: 0.42,
-                        minHeight: 12,
-                        backgroundColor: isDark
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFE2E8F0),
-                        color: primaryColor,
+                          );
+                        },
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Checked In',
-                          style: TextStyle(
-                            color: textMuted,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          '42% Capacity',
-                          style: TextStyle(
-                            color: textMuted,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-                    Divider(color: borderColor),
-                    const SizedBox(height: 16),
-
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'VIP Guests',
-                                style: TextStyle(
-                                  color: textMuted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Text(
-                                '45/100',
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'General Admission',
-                                style: TextStyle(
-                                  color: textMuted,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Text(
-                                '455/1100',
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Action Grid
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(100),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 4,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(50),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.qr_code_scanner, size: 32),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Start Scanning',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildSecondaryActionButton(
-                          icon: Icons.groups,
-                          label: 'Attendee List',
-                          isDark: isDark,
-                          primaryColor: primaryColor,
-                          cardColor: cardColor,
-                          borderColor: borderColor,
-                          textColor: textColor,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _buildSecondaryActionButton(
-                          icon: Icons.note_add,
-                          label: 'Add Note',
-                          isDark: isDark,
-                          primaryColor: primaryColor,
-                          cardColor: cardColor,
-                          borderColor: borderColor,
-                          textColor: textColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Recent Activity
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Recent Check-ins',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withAlpha(25),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          'Live',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  _buildRecentItem(
-                    name: 'Sarah Jenkins',
-                    desc: 'VIP Access • Gate A',
-                    time: '2m ago',
-                    avatarUrl:
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuDys9g22umKyRHJY8OLyZ3myDHPC0Gz12QLQ5qHADRViH9fVV3MMw-xnxz2nsHxg0NZQWq53ezQLWEPWd-NG3dau1dLHGCMsAKO0qYJtjKPqe5jiAxupjFirnH8GpL04s9wdilUsAenhEFVX8xPrfMDCtXBCjbn_vn4DcN_X5hzZ_cXmFfRpWR-sSSsUL43y9aoEsBp-te5bypHEw8Foiuer0WH2E3-PvJkVbq5ixhqWGZTaT38B_b07MGDuylb9PKHjrvXff70tFQ',
-                    cardColor: cardColor,
-                    borderColor: borderColor,
-                    textColor: textColor,
-                    textMuted: textMuted,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildRecentItem(
-                    name: 'John Doe',
-                    desc: 'General Admission • Gate B',
-                    time: '5m ago',
-                    avatarInitials: 'JD',
-                    primaryColor: primaryColor,
-                    cardColor: cardColor,
-                    borderColor: borderColor,
-                    textColor: textColor,
-                    textMuted: textMuted,
-                  ),
-                  const SizedBox(height: 12),
-                  Opacity(
-                    opacity: 0.7,
-                    child: _buildRecentItem(
-                      name: 'Michael Smith',
-                      desc: 'General Admission • Gate A',
-                      time: '12m ago',
-                      avatarUrl:
-                          'https://lh3.googleusercontent.com/aida-public/AB6AXuAz88wGCdoi4uwwzQGl2FiPZ9nBJV7eGyy-gx5rM4eF5mdEXRkBmmSFHS9bTWRR9xzu8ap6ORUt3hT08XWo7JWGcwsc-t84cRzQ2bmsWILrK3v0QiX5L6pFZP3jQBjgmIDyAN4IH3acK0wL7EH9MDT04F0qe6qB6Pm-2gZRb83gGzcIvTDj5ovSsYwmpAqyZuCutKmFTF72VXoGz_y4B0ldpEybuKogmWx85vY7p4HHgmokNhv51iby0wZZPi0CNUn-D3IdpZqorpc',
-                      cardColor: cardColor,
-                      borderColor: borderColor,
-                      textColor: textColor,
-                      textMuted: textMuted,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: isDark ? Colors.white : const Color(0xFF0F172A),
-        foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-        child: const Icon(Icons.support_agent),
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: cardColor,
-          border: Border(top: BorderSide(color: borderColor)),
-        ),
+            color: cardColor,
+            border: Border(top: BorderSide(color: borderColor))),
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(context, Icons.event, 'Events', false, primaryColor, const SelectEventScreen()),
-                _buildNavItem(context, Icons.qr_code_scanner, 'Scan', true, primaryColor, null),
-                _buildNavItem(context, Icons.person, 'Profile', false, primaryColor, const ProfileScreen()),
+                _buildNavItem(context, Icons.dashboard, 'Dashboard', true,
+                    primaryColor, null),
+                _buildNavItem(context, Icons.qr_code_scanner, 'Scan', false,
+                    primaryColor, const ScanScreen()),
+                _buildNavItem(context, Icons.person, 'Profile', false,
+                    primaryColor, const ProfileScreen()),
               ],
             ),
           ),
@@ -504,159 +712,38 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSecondaryActionButton({
-    required IconData icon,
-    required String label,
-    required bool isDark,
-    required Color primaryColor,
-    required Color cardColor,
-    required Color borderColor,
-    required Color textColor,
-  }) {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: cardColor,
-        foregroundColor: textColor,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: borderColor),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 24),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, size: 36, color: primaryColor),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecentItem({
-    required String name,
-    required String desc,
-    required String time,
-    String? avatarUrl,
-    String? avatarInitials,
-    Color? primaryColor,
-    required Color cardColor,
-    required Color borderColor,
-    required Color textColor,
-    required Color textMuted,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: avatarInitials != null
-                  ? primaryColor?.withAlpha(25)
-                  : Colors.grey[200],
-              shape: BoxShape.circle,
-              image: avatarUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(avatarUrl),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            alignment: Alignment.center,
-            child: avatarInitials != null
-                ? Text(
-                    avatarInitials,
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                Text(desc, style: TextStyle(color: textMuted, fontSize: 12)),
-              ],
-            ),
-          ),
-          Text(
-            time,
-            style: TextStyle(
-              color: textMuted,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(
-    BuildContext context,
-    IconData icon,
-    String label,
-    bool isActive,
-    Color primaryColor,
-    Widget? targetScreen,
-  ) {
+  Widget _buildNavItem(BuildContext context, IconData icon, String label,
+      bool isActive, Color primaryColor, Widget? target) {
     return GestureDetector(
       onTap: () {
-        if (!isActive && targetScreen != null) {
+        if (!isActive && target != null) {
           Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => targetScreen),
-          );
+              context, MaterialPageRoute(builder: (_) => target));
         }
       },
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 64,
-          height: 32,
-          decoration: BoxDecoration(
-            color: isActive ? primaryColor.withAlpha(25) : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+        children: [
+          Container(
+            width: 64,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isActive ? primaryColor.withAlpha(30) : Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon,
+                color: isActive ? primaryColor : Colors.grey.shade500),
           ),
-          child: Icon(
-            icon,
-            color: isActive ? primaryColor : Colors.grey.shade500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            color: isActive ? primaryColor : Colors.grey.shade500,
-          ),
-        ),
-      ],
-    ),
+          const SizedBox(height: 4),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight:
+                      isActive ? FontWeight.bold : FontWeight.w500,
+                  color: isActive ? primaryColor : Colors.grey.shade500)),
+        ],
+      ),
     );
   }
 }

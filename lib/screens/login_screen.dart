@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'select_event_screen.dart';
+import '../app_state.dart';
+import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -43,12 +44,13 @@ class _LoginScreenState extends State<LoginScreen> {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('isLoggedIn', true);
         await prefs.setString('userEmail', email);
+        AppState.instance.loggedInEmail = email;
 
         if (mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const SelectEventScreen(),
+              builder: (context) => const DashboardScreen(),
             ),
           );
         }
@@ -149,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Akar Women Group',
+                          'AWG Scan',
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,

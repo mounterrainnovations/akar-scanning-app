@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../app_state.dart';
 import 'login_screen.dart';
-import 'select_event_screen.dart';
+import 'dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -20,6 +21,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _checkLoginState() async {
     final prefs = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    if (isLoggedIn) {
+      AppState.instance.loggedInEmail = prefs.getString('userEmail') ?? '';
+    }
 
     await Future.delayed(const Duration(milliseconds: 2500));
 
@@ -27,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (isLoggedIn) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const SelectEventScreen()),
+          MaterialPageRoute(builder: (context) => const DashboardScreen()),
         );
       } else {
         Navigator.pushReplacement(
@@ -110,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return const Column(
       children: [
         Text(
-          'Akar Women Group',
+          'AWG Scan',
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.bold,

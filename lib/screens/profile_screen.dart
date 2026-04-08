@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../app_state.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
-import 'select_event_screen.dart';
+import 'scan_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -76,7 +77,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 16),
             // Details
             Text(
-              'staff@akar.com',
+              AppState.instance.loggedInEmail ?? 'staff@akar.com',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -167,30 +168,9 @@ class ProfileScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(
-                  context,
-                  Icons.event,
-                  'Events',
-                  false,
-                  primaryColor,
-                  const SelectEventScreen(),
-                ),
-                _buildNavItem(
-                  context,
-                  Icons.qr_code_scanner,
-                  'Scan',
-                  false,
-                  primaryColor,
-                  const DashboardScreen(),
-                ),
-                _buildNavItem(
-                  context,
-                  Icons.person,
-                  'Profile',
-                  true,
-                  primaryColor,
-                  null,
-                ),
+                _buildNavItem(context, Icons.dashboard, 'Dashboard', false, primaryColor, const DashboardScreen()),
+                _buildNavItem(context, Icons.qr_code_scanner, 'Scan', false, primaryColor, const ScanScreen()),
+                _buildNavItem(context, Icons.person, 'Profile', true, primaryColor, null),
               ],
             ),
           ),

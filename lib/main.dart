@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/splash_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';void main() async {
+import 'widgets/connectivity_wrapper.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
     url: 'https://hflfauratacalmqlwdjd.supabase.co',
@@ -43,7 +46,9 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: ThemeMode.system,
-      home: const SplashScreen(),
+      home: const ConnectivityWrapper(
+        child: SplashScreen(),
+      ),
     );
   }
 }
